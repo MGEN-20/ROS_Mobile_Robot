@@ -17,7 +17,7 @@ coords = Coords()
 pub = rospy.Publisher('/webcam', Image, queue_size=1)
 pub2 = rospy.Publisher('robot_coords', Coords, queue_size=1)
 rospy.init_node('OakImage', anonymous = False)
-rate = rospy.Rate(30)
+rate = rospy.Rate(15)
 
 FRAME_SIZE = (640, 360)
 
