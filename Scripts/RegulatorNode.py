@@ -38,15 +38,21 @@ def MotorRegulator(x, y=0, z=0):
     xr = 0
     xl = 0
     
-    if x > 0 and x < 350:
-        xr = 60
-        xl = -60
-    elif x > -350 and x < 0:
-        xr = -60
-        xl = 60
+    if x > 250:
+        xr = -40
+        xl = 40
+
+    elif x < -250:
+        xr = 40
+        xl = -40
+    
     elif x == 0:
-        xl = 0
         xr = 0
+        xl = 0
+
+    else:
+        xr = 40
+        xl = 40
 
     speed = (xr,xl)
 
@@ -67,8 +73,10 @@ def ChatterCallback(message):
 
     XCoordVector.append(message.X)
 
-    if len(XCoordVector) >= 20:
+    if len(XCoordVector) >= 10:
         PublishSpeed()
+
+    rospy.on_shutdown(OnShutdown) 
 
 
 
@@ -79,8 +87,6 @@ def Listener():
     rospy.Subscriber('robot_coords', Coords, ChatterCallback)
 
     rospy.spin()
-
-    rospy.on_shutdown(OnShutdown) 
 
 if __name__ == '__main__':
     Listener()
