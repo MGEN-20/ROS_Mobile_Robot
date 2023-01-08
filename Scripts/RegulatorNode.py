@@ -50,19 +50,9 @@ def chatter_callback(message):
 
     speed.R = velocity[0]
 
-    while not rospy.is_shutdown():
-
-        velocity = MotorRegulator(message.X, message.Y, message.Z)
-
-        speed.L = velocity[1]
-
-        speed.R = velocity[0]
-
-        rospy.loginfo(speed.L)
-        rospy.loginfo(speed.R)
-        pub.publish(speed)
-        rate.sleep()
-        rospy.on_shutdown(OnShutdown) 
+    rospy.loginfo(speed.L)
+    rospy.loginfo(speed.R)
+    pub.publish(speed)
 
 def listener():
 
@@ -71,6 +61,8 @@ def listener():
     rospy.Subscriber('robot_coords', Coords, chatter_callback)
 
     rospy.spin()
+
+    rospy.on_shutdown(OnShutdown) 
 
 if __name__ == '__main__':
     listener()
