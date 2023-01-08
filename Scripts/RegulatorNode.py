@@ -10,13 +10,15 @@ def MotorRegulator(x, y, z):
 
     xr = 0
     xl = 0
+
+    print(f'X : {x}')
     
     if x > 0 and x < 350:
         xr = 60
         xl = -60
     elif x > -350:
-        xl = 60
         xr = -60
+        xl = 60
     else:
         xl = 0
         xr = 0
@@ -38,17 +40,24 @@ def OnShutdown():
 
 def chatter_callback(message):
 
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(30)
 
     speed=Speed()
 
     velocity = MotorRegulator(message.X, message.Y, message.Z)
 
-    speed.L = velocity[0]
+    speed.L = velocity[1]
 
-    speed.R = velocity[1]
+    speed.R = velocity[0]
 
     while not rospy.is_shutdown():
+
+        velocity = MotorRegulator(message.X, message.Y, message.Z)
+
+        speed.L = velocity[1]
+
+        speed.R = velocity[0]
+
         rospy.loginfo(speed.L)
         rospy.loginfo(speed.R)
         pub.publish(speed)
