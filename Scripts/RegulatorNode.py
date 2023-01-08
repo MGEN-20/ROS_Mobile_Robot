@@ -3,23 +3,48 @@ import rospy
 from std_msgs.msg import Int32 
 from robot.msg import Speed
 from robot.msg import Coords
+import numpy as np
 
 pub = rospy.Publisher('robot_speed', Speed, queue_size=10)
 
-def MotorRegulator(x, y, z):
+speed = Speed()
+
+XCoordVector = []
+
+
+def PublishSpeed():
+
+    global XCoordVector
+
+    mean = np.mean(np.array(XCoordVector))
+
+    XCoordVector = []
+
+    print(f'Mean: {mean}')
+
+    speeds = MotorRegulator(x=mean)
+
+    speed.L = speeds[1]
+
+    speed.R = speeds[0]
+
+    rospy.loginfo(speed.L)
+    rospy.loginfo(speed.R)
+    pub.publish(speed)
+
+
+def MotorRegulator(x, y=0, z=0):
 
     xr = 0
     xl = 0
-
-    print(f'X : {x}')
     
     if x > 0 and x < 350:
         xr = 60
         xl = -60
-    elif x > -350:
+    elif x > -350 and x < 0:
         xr = -60
         xl = 60
-    else:
+    elif x == 0:
         xl = 0
         xr = 0
 
@@ -38,31 +63,24 @@ def OnShutdown():
     pub.publish(speed)
 
 
-def chatter_callback(message):
+def ChatterCallback(message):
 
-    rate = rospy.Rate(30)
+    XCoordVector.append(message.X)
 
-    speed=Speed()
+    if len(XCoordVector) >= 20:
+        PublishSpeed()
 
-    velocity = MotorRegulator(message.X, message.Y, message.Z)
 
-    speed.L = velocity[1]
 
-    speed.R = velocity[0]
-
-    rospy.loginfo(speed.L)
-    rospy.loginfo(speed.R)
-    pub.publish(speed)
-
-def listener():
+def Listener():
 
     rospy.init_node('Regulator_listener', anonymous=True)
 
-    rospy.Subscriber('robot_coords', Coords, chatter_callback)
+    rospy.Subscriber('robot_coords', Coords, ChatterCallback)
 
     rospy.spin()
 
     rospy.on_shutdown(OnShutdown) 
 
 if __name__ == '__main__':
-    listener()
+    Listener()
