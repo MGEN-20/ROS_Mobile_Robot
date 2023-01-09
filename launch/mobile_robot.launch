@@ -1,0 +1,12 @@
+<launch>
+
+    <node pkg="robot" type="OakHumanDetection.py" name="Camera_Node"/>
+
+    <node pkg="robot" type="DriversNode.py" name="Drivers_Node"/>
+
+    <param name="neg_threshold" value="-350.0"/>
+    <param name="pos_threshold" value="350.0"/>
+
+    <node pkg="robot" type="RegulatorNode.py" name="Regulator_Node"/>
+
+</launch>
