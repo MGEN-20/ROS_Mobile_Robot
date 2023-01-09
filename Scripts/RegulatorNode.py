@@ -61,8 +61,6 @@ def MotorRegulator(x, y=0, z=0):
 
 def OnShutdown():
 
-    speed = Speed()
-
     speed.L = 0
     speed.R = 0
 
