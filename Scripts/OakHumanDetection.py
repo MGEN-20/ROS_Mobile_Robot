@@ -14,7 +14,7 @@ bridge = CvBridge()
 pipeline = dai.Pipeline()
 coords = Coords()
 
-pub = rospy.Publisher('/webcam', Image, queue_size=1)
+pub = rospy.Publisher('/Camera_frames', Image, queue_size=1)
 pub2 = rospy.Publisher('robot_coords', Coords, queue_size=1)
 rospy.init_node('OakImage', anonymous = False)
 rate = rospy.Rate(15)
@@ -47,6 +47,28 @@ def display_info(frame, bbox, coordinates, status, status_color, fps):
     cv2.putText(frame, f'FPS: {fps:.2f}', (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255))
 
 
+def getFrame(queue):
+    # Get frame from queue
+    frame = queue.get()
+    # Convert frame to OpenCV format and return
+    return frame.getCvFrame()
+
+def getMonoCamera(pipeline, isLeft):
+    # Configure mono camera
+    mono = pipeline.createMonoCamera()
+
+    # Set Camera Resolution
+    mono.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+
+    if isLeft:
+        # Get left camre
+        mono.setBoardSocket(dai.CameraBoardSocket.LEFT)
+    else:
+        # Get right camera
+        mono.setBoardSocket(dai.CameraBoardSocket.RIGHT)
+    return mono
+
+
 def talker():
 
     cam = pipeline.createColorCamera()
@@ -54,6 +76,7 @@ def talker():
     cam.setInterleaved(False)
     cam.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
     cam.setBoardSocket(dai.CameraBoardSocket.RGB)
+    cam.setImageOrientation(dai.CameraImageOrientation.ROTATE_180_DEG)
 
     mono_left = pipeline.createMonoCamera()
     mono_left.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
@@ -75,7 +98,7 @@ def talker():
         )
 
     face_spac_det_nn = pipeline.createMobileNetSpatialDetectionNetwork()
-    face_spac_det_nn.setConfidenceThreshold(0.60)
+    face_spac_det_nn.setConfidenceThreshold(0.7)
     face_spac_det_nn.setBlobPath(blob_path)
     face_spac_det_nn.setDepthLowerThreshold(10)
     face_spac_det_nn.setDepthUpperThreshold(5000)
