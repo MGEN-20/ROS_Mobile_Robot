@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import rospy
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32 
 from robot.msg import Speed
 from robot.msg import Coords
 import numpy as np
@@ -13,13 +13,12 @@ XCoordVector = []
 
 ZCoordVector = []
 
-neg_threshold = rospy.get_param("neg_threshold")
-pos_threshold = rospy.get_param("pos_threshold")
-Dkp = rospy.get_param("Dkp")
+ThresholdGain = rospy.get_param("ThresholdGain")
+DistanceGain = rospy.get_param("DistanceGain")
 SteeringSpeed = rospy.get_param("SteeringSpeed")
 
-
 def PublishSpeed():
+
     global XCoordVector, ZCoordVector
 
     meanX = np.mean(np.array(XCoordVector))
@@ -27,6 +26,8 @@ def PublishSpeed():
 
     XCoordVector = []
     ZCoordVector = []
+
+    # print(f'Mean: {mean}')
 
     speeds = MotorRegulator(x=meanX, z=meanZ)
 
@@ -40,34 +41,39 @@ def PublishSpeed():
 
 
 def MotorRegulator(x, y=0, z=0):
-    xr = 0
-    xl = 0
+
+    RightVelocity = 0
+    LeftVelocity = 0
+
+    neg_threshold = -int(ThresholdGain * z)
+    pos_threshold = int(ThresholdGain * z)
 
     rospy.loginfo(x)
 
     if x > pos_threshold and x != 0:
 
-        xr = -SteeringSpeed
-        xl = SteeringSpeed
+        RightVelocity = -SteeringSpeed
+        LeftVelocity = SteeringSpeed
 
     elif x < neg_threshold and x != 0:
-        xr = SteeringSpeed
-        xl = -SteeringSpeed
-
+        RightVelocity = SteeringSpeed
+        LeftVelocity = -SteeringSpeed
+    
     elif x == 0:
-        xr = 0
-        xl = 0
+        RightVelocity = 0
+        LeftVelocity = 0
 
     else:
-        xr = int(Dkp * z)
-        xl = int(Dkp * z)
+        RightVelocity = int(DistanceGain * z)
+        LeftVelocity = int(DistanceGain * z)
 
-    speed = (xr, xl)
+    speed = (RightVelocity,LeftVelocity)
 
     return speed
 
 
 def OnShutdown():
+
     speed = Speed()
 
     speed.L = 0
@@ -84,16 +90,17 @@ def ChatterCallback(message):
     if len(XCoordVector) >= 4:
         PublishSpeed()
 
-    rospy.on_shutdown(OnShutdown)
+    rospy.on_shutdown(OnShutdown) 
+
 
 
 def Listener():
+
     rospy.init_node('Regulator', anonymous=True)
 
     rospy.Subscriber('robot_coords', Coords, ChatterCallback)
 
     rospy.spin()
-
 
 if __name__ == '__main__':
     Listener()
