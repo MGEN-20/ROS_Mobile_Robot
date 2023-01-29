@@ -47,26 +47,7 @@ def display_info(frame, bbox, coordinates, status, status_color, fps):
     cv2.putText(frame, f'FPS: {fps:.2f}', (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255))
 
 
-def getFrame(queue):
-    # Get frame from queue
-    frame = queue.get()
-    # Convert frame to OpenCV format and return
-    return frame.getCvFrame()
 
-def getMonoCamera(pipeline, isLeft):
-    # Configure mono camera
-    mono = pipeline.createMonoCamera()
-
-    # Set Camera Resolution
-    mono.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-
-    if isLeft:
-        # Get left camre
-        mono.setBoardSocket(dai.CameraBoardSocket.LEFT)
-    else:
-        # Get right camera
-        mono.setBoardSocket(dai.CameraBoardSocket.RIGHT)
-    return mono
 
 
 def talker():
